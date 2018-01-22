@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Custom Lint rules</string>
+    <string name="action_settings">Settings</string>
+</resources>
