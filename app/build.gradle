@@ -17,6 +17,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    productFlavors {
+        firstFlavor{}
+
+        secondFlavor{}
+
+        thridFlavor{}
+    }
 }
 
 dependencies {
@@ -27,5 +35,19 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}
+
+def publish = project.tasks.create("publishAllDebugVariants")
+
+android.productFlavors.all { flavor ->
+    def task = project.tasks.create("publish${flavor.name}Apk", Copy)
+
+    def outputFileDir = project.projectDir.toString() + '\\build\\outputs\\apk\\'+flavor.name+'\\debug'
+    task.from(outputFileDir)
+    task.into(project.projectDir.getParentFile().toString()+'\\everyFlavorDebugApks')
+    task.include '**/*.apk'
+
+    task.dependsOn assemble
+    publish.dependsOn task
 }
 
