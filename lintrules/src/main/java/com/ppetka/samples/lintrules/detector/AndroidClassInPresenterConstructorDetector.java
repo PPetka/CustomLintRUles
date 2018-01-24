@@ -18,6 +18,11 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * Created by Przemysław Petka on 1/21/2018.
+ *
+ */
+
 public class AndroidClassInPresenterConstructorDetector extends Detector implements UastScanner {
     /*ISSUE*/
     public static final Issue ISSUE = Issue.create("NoAndroidClassesAllowedInPresenterIssue",
