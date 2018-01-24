@@ -9,6 +9,8 @@ import java.util.List;
 
 /**
  * Created by Przemysław Petka on 1/23/2018.
+ *
+ * This class represent Lint registry which is responsible for holding every custom lint issue to be tracked
  */
 
 public class LintRegistry extends IssueRegistry {
