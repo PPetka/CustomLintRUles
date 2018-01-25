@@ -55,7 +55,7 @@ public class AndroidClassInPresenterConstructorDetector extends Detector impleme
                     UMethod[] methods = uClass.getMethods();
                     //check only for constructors
                     for (UMethod method : methods) {
-                        if (method.getName().equals(uClass.getName())) {
+                        if (method.isConstructor()) {
                             //check constructor arguments for android classes
                             List<UParameter> uastParameters = method.getUastParameters();
                             for (UParameter uastParameter : uastParameters) {
