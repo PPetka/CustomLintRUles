@@ -1,5 +1,5 @@
 apply plugin: 'java-library'
-apply plugin: 'java'
+apply plugin: "kotlin"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -19,6 +19,12 @@ jar {
         attributes('Lint-Registry': 'com.ppetka.samples.lintrules.LintRegistry')
     }
 }
+
+sourceSets {
+    main.kotlin.srcDirs += 'src/main/myKotlin'
+    main.java.srcDirs += 'src/main/myJava'
+}
+
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 assemble.finalizedBy("copyJarIntoDefaultAndroidFolder")
