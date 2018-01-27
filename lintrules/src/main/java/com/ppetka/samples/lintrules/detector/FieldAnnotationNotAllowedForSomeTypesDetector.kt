@@ -2,18 +2,13 @@ package com.ppetka.samples.lintrules.detector
 
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiType
-import com.ppetka.samples.lintrules.Send
 
-import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
 
 import java.util.Arrays
-import java.util.Collections
 import java.util.EnumSet
 
 import com.android.tools.lint.detector.api.Scope.JAVA_FILE
