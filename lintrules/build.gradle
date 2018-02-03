@@ -4,47 +4,24 @@ apply plugin: "kotlin"
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     dependencies {
-        implementation 'com.android.tools.lint:lint:26.0.1'
-        implementation 'com.android.tools.lint:lint-api:26.0.1'
-        implementation 'com.android.tools.lint:lint-checks:26.0.1'
+        compileOnly "com.android.tools.lint:lint-api:$lint_version"
+        compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
+
+        testImplementation "com.android.tools.lint:lint:$lint_version"
+        testImplementation "com.android.tools.lint:lint-tests:$lint_version"
     }
 }
 
 jar {
-    baseName 'com.ppetka.samples.lintruless'
+    baseName 'custom_lint_rules'
     version '1.0'
 
     manifest {
-        attributes 'Manifest-Version': 1.0
-        attributes('Lint-Registry': 'com.ppetka.samples.lintrules.LintRegistry')
+        attributes('Lint-Registry-v2': 'com.ppetka.samples.lintrules.LintRegistry')
     }
-}
-
-sourceSets {
-    main.kotlin.srcDirs += 'src/main/myKotlin'
-    main.java.srcDirs += 'src/main/myJava'
 }
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
-assemble.finalizedBy("copyJarIntoDefaultAndroidFolder")
 
-task copyJarIntoDefaultAndroidFolder(type: Copy) {
-    //var
-    doFirst {
-        println("beforeCopy")
-    }
-    doLast {
-        println("Files copied!!")
-    }
-
-    ext.pathFrom = '\\build\\libs'
-    ext.pathTo = 'C:\\Users\\przem\\.android\\lint'
-    //print
-    println('pathFrom: ' + ext.pathFrom)
-    println('pathTo: ' + ext.pathTo)
-
-    //copy
-    from ext.pathFrom
-    into ext.pathTo
-}
