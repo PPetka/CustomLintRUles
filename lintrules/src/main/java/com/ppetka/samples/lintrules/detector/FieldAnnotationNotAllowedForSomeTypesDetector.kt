@@ -1,14 +1,11 @@
 package com.ppetka.samples.lintrules.detector
 
-import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
 import com.intellij.psi.PsiClassType
 
 import org.jetbrains.uast.UClass
-import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
 
-import java.util.Arrays
 import java.util.EnumSet
 
 import com.android.tools.lint.detector.api.Scope.JAVA_FILE
@@ -19,16 +16,13 @@ import com.android.tools.lint.detector.api.Scope.JAVA_FILE
 
 class FieldAnnotationNotAllowedForSomeTypesDetector : Detector(), Detector.UastScanner {
     companion object {
-        private val ANNOTATION_PCKG = "com.ppetka.samples.customlintrules.Send"
-        private val ALLOWED_ANNOTATING_CLASS_PCKG = "java.lang.Float"
+        private const val SUPER_CLASS = "foo.pckg.SuperCls"
+        private const val ANNOTATION_PCKG = "foo.anno.FooAnnotation"
+        private const val ALLOWED_ANNOTATING_CLASS_PCKG = "allowed.ann.pckg.AACLS"
 
-        private val WANTED_CLASS_PKCG_NAMES = Arrays.asList(
-                "com.ppetka.samples.lintrules.detector.FieldAnnotationNotAllowedForSomeTypesDetector",
-                "com.ppetka.samples.customlintrules.MainActivity")
-
-        val ISSUE = Issue.create("SendAnnotationNotAllowedForGivenType",
-                "**@Send** annotation not allowed for this typee",
-                "Current class does not support multiple **@Send** annotations for sending each object individually, Please add this object to **Package** object",
+        val ISSUE = Issue.create("FooAnnotationNotAllowedForGivenType",
+                "**FooAnnotation** annotation not allowed for this type",
+                "Current class does not support multiple **FooAnnotation** annotations for sending each object individually",
                 Category.CORRECTNESS,
                 8,
                 Severity.ERROR,
@@ -36,37 +30,33 @@ class FieldAnnotationNotAllowedForSomeTypesDetector : Detector(), Detector.UastS
     }
 
     /*IMPLEMENTATION*/
-    override fun getApplicableUastTypes(): List<Class<out UElement>> {
-        return listOf<Class<out UElement>>(UClass::class.java)
+    override fun applicableSuperClasses(): List<String>? {
+        return listOf(SUPER_CLASS)
     }
 
-    override fun createUastHandler(javaContext: JavaContext?): UElementHandler {
-        return object : UElementHandler() {
-            override fun visitClass(uClass: UClass?) {
-                if (WANTED_CLASS_PKCG_NAMES.contains(uClass!!.qualifiedName)) {
-                    val fields = uClass.fields
-                    for (field in fields) {
-                        val annotations = field.annotations
-                        annotations
-                                .filter { ANNOTATION_PCKG == it.qualifiedName }
-                                .forEach {
-                                    if (fieldIsInvalidClass(field)) {
-                                        javaContext?.report(ISSUE, uClass, javaContext.getLocation(it), ISSUE.getBriefDescription(TextFormat.TEXT))
-                                    }
-                                }
-                    }
-                }
+    override fun visitClass(javaContext: JavaContext, uClass: UClass) {
+        if (uClass.qualifiedName != SUPER_CLASS) {
+            val fields = uClass.fields
+            for (field in fields) {
+                val annotations = field.annotations
+                annotations
+                        .filter { ANNOTATION_PCKG == it.qualifiedName }
+                        .forEach {
+                            if (!fieldIsValidClass(field)) {
+                                javaContext.report(ISSUE, uClass, javaContext.getLocation(it), ISSUE.getBriefDescription(TextFormat.TEXT))
+                            }
+                        }
             }
         }
     }
 
-    private fun fieldIsInvalidClass(field: UField): Boolean {
+    private fun fieldIsValidClass(field: UField): Boolean {
         val fieldType = field.type
         if (fieldType is PsiClassType) {
             val fieldClass = fieldType.resolve()
-                if (ALLOWED_ANNOTATING_CLASS_PCKG != fieldClass?.qualifiedName) {
-                    return true
-                }
+            if (ALLOWED_ANNOTATING_CLASS_PCKG == fieldClass?.qualifiedName) {
+                return true
+            }
         }
         return false
     }
