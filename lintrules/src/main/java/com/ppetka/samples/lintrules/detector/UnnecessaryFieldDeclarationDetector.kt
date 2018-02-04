@@ -15,8 +15,8 @@ import java.util.*
 class UnnecessaryFieldDeclarationDetector : Detector(), Detector.UastScanner {
 
     companion object {
-        private const val SUPER_CLASS = "com.ppetka.samples.lintrules.test.SuperAlleluja"
-        private const val FIELD_CLASS = "com.ppetka.samples.lintrules.test.FieldClass"
+        private const val SUPER_CLASS = "foo.pckg.SuperCls"
+        private const val FIELD_CLASS = "bar.pckgg.FieldCls"
 
         val ISSUE = Issue.create("FieldRedeclaration",
                 "This field is re-declared",
@@ -27,24 +27,19 @@ class UnnecessaryFieldDeclarationDetector : Detector(), Detector.UastScanner {
                 Implementation(UnnecessaryFieldDeclarationDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE)))!!
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> {
-        return listOf<Class<out UElement>>(UClass::class.java)
+    override fun applicableSuperClasses(): List<String>? {
+        return listOf(SUPER_CLASS)
     }
 
-    override fun createUastHandler(javaContext: JavaContext): UElementHandler {
-        return object : UElementHandler() {
-            override fun visitClass(uClass: UClass) {
-                val evaluator: JavaEvaluator = javaContext.evaluator
-                if (evaluator.extendsClass(uClass.psi, SUPER_CLASS, true)) {
-                    val fields = uClass.fields
-                    fields.forEach {
-                        val type = it.type
-                        if (type is PsiClassType) {
-                            val resolvedClass = type.resolve()
-                            if (FIELD_CLASS == resolvedClass?.qualifiedName) {
-                                javaContext.report(UnnecessaryFieldDeclarationDetector.ISSUE, uClass, javaContext.getLocation(it), UnnecessaryFieldDeclarationDetector.ISSUE.getBriefDescription(TextFormat.TEXT))
-                            }
-                        }
+    override fun visitClass(javaContext: JavaContext, uClass: UClass) {
+        if (uClass.qualifiedName != SUPER_CLASS) {
+            val fields = uClass.fields
+            fields.forEach {
+                val type = it.type
+                if (type is PsiClassType) {
+                    val resolvedClass = type.resolve()
+                    if (FIELD_CLASS == resolvedClass?.qualifiedName) {
+                        javaContext.report(ISSUE, uClass, javaContext.getLocation(it), ISSUE.getBriefDescription(TextFormat.TEXT))
                     }
                 }
             }
