@@ -1,17 +1,10 @@
 package com.ppetka.samples.lintrules.detector
 
-import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
 import com.android.tools.lint.detector.api.Detector.UastScanner
-
 import com.android.tools.lint.detector.api.Scope.JAVA_FILE
-
 import org.jetbrains.uast.UClass
-import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UMethod
-import org.jetbrains.uast.UParameter
 
-import java.util.Collections
 import java.util.EnumSet
 
 /**
@@ -19,12 +12,9 @@ import java.util.EnumSet
  */
 
 class AndroidClassInPresenterConstructorDetector : Detector(), UastScanner {
-
-    /*IMPLEMENTATION*/
-
     companion object {
-        private const val PRESENTER_PACKAGE_NAME = "com.ppetka.samples.customlintrules.Presenter"
-        private const val ANDROID_STARTING_PACKAGE_NAME = "android."
+        private const val PRESENTER_CLS = "foo.bar.Presenter"
+        private const val ANDROID_STARTING_PCKG_NAME = "android."
 
         val ISSUE = Issue.create("NoAndroidClassesAllowedInPresenterIssue",
                 "Android dependencies not allowed in Presenter classes",
@@ -35,31 +25,24 @@ class AndroidClassInPresenterConstructorDetector : Detector(), UastScanner {
                 Implementation(AndroidClassInPresenterConstructorDetector::class.java, EnumSet.of<Scope>(JAVA_FILE)))!!
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> {
-        return listOf<Class<out UElement>>(UClass::class.java)
+    /*IMPLEMENTATION*/
+    override fun applicableSuperClasses(): List<String>? {
+        return listOf(PRESENTER_CLS)
     }
 
-    override fun createUastHandler(javaContext: JavaContext?): UElementHandler {
-
-        return object : UElementHandler() {
-            override fun visitClass(uClass: UClass?) {
-                //visit only Presenter classes
-                if (PRESENTER_PACKAGE_NAME == uClass!!.qualifiedName) {
-                    val methods = uClass.methods
-                    //check only for constructors
-                    methods
-                            .filter { it.isConstructor }
-                            .forEach {
-                                val uastParameters = it.uastParameters
-                                for (uastParameter in uastParameters) {
-                                    val argType = uastParameter.type.canonicalText
-                                    if (argType.startsWith(ANDROID_STARTING_PACKAGE_NAME)) {
-                                        javaContext?.report(ISSUE, uClass, javaContext.getLocation(uastParameter.psi), ISSUE.getBriefDescription(TextFormat.TEXT))
-                                    }
-                                }
+    override fun visitClass(javaContext: JavaContext, uClass: UClass) {
+        if (uClass.qualifiedName != PRESENTER_CLS) {
+            val methods = uClass.methods
+            methods
+                    .forEach {
+                        val uastParameters = it.uastParameters
+                        for (uastParameter in uastParameters) {
+                            val argType = uastParameter.type.canonicalText
+                            if (argType.startsWith(ANDROID_STARTING_PCKG_NAME)) {
+                                javaContext.report(ISSUE, uClass, javaContext.getLocation(uastParameter.psi), ISSUE.getBriefDescription(TextFormat.TEXT))
                             }
-                }
-            }
+                        }
+                    }
         }
     }
 }
