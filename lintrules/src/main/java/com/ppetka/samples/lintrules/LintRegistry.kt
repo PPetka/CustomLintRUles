@@ -3,6 +3,7 @@ package com.ppetka.samples.lintrules
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Issue
 import com.ppetka.samples.lintrules.detector.AndroidClassInPresenterConstructorDetector
+import com.ppetka.samples.lintrules.detector.ComposeCallOrderDetector
 import com.ppetka.samples.lintrules.detector.FieldAnnotationNotAllowedForSomeTypesDetector
 import com.ppetka.samples.lintrules.detector.UnnecessaryFieldDeclarationDetector
 
@@ -24,6 +25,7 @@ class LintRegistry : IssueRegistry() {
         issueList.add(AndroidClassInPresenterConstructorDetector.ISSUE)
         issueList.add(FieldAnnotationNotAllowedForSomeTypesDetector.ISSUE)
         issueList.add(UnnecessaryFieldDeclarationDetector.ISSUE)
+        issueList.add(ComposeCallOrderDetector.ISSUE)
     }
 
     override fun getIssues(): List<Issue> {
