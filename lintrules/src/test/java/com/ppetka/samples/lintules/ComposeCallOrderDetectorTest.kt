@@ -12,11 +12,29 @@ import org.junit.Test
 
 class ComposeCallOrderDetectorTest {
 
+    val transoferCLS = java("""
+          |package fooo.tran;
+          |
+          |class TranHolder{
+          |
+          |public static <T> SingleTransformer<T, T> asd() {
+          |      Integer innnn = new Interger(4);
+          |      SingleTransformer s = new SingleTransformer() {
+          |            @Override
+          |            public SingleSource apply(Single upstream) {
+          |                 return upstream;
+          |            }
+          |      };
+          |      return s;
+          |}
+          |}""".trimMargin())
+
     @Test
-    fun callingCompositeDisposableAddAll() {
+    fun another() {
         lint().allowCompilationErrors()
-                .files(rxJava2(), java("""
+                .files(transoferCLS, rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
+          |import fooo.tran;
           |
           |class S{
           |
@@ -24,7 +42,7 @@ class ComposeCallOrderDetectorTest {
           |     Single.just("BOSS")
           |         .subscribeOn(Schedulers.io())
           |         .observeOn(AndroidSchedulers.mainThread())
-          |         .compose(this.<String>asd())
+          |         .compose(TranHolder.asd())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
           |             public void onSubscribe(Disposable d) {}
@@ -36,17 +54,6 @@ class ComposeCallOrderDetectorTest {
           |             public void onError(Throwable e) {}
           |          });
           |          thirdMethod();
-          |}
-          |
-          |private <T> SingleTransformer<T, T> asd() {
-          |      Integer innnn = new Interger(4);
-          |      SingleTransformer s = new SingleTransformer() {
-          |            @Override
-          |            public SingleSource apply(Single upstream) {
-          |                 return upstream;
-          |            }
-          |      };
-          |      return s;
           |}
           |
           |private void thirdMethod(){
