@@ -25,7 +25,11 @@ class LintRegistry : IssueRegistry() {
         issueList.add(AndroidClassInPresenterConstructorDetector.ISSUE)
         issueList.add(FieldAnnotationNotAllowedForSomeTypesDetector.ISSUE)
         issueList.add(UnnecessaryFieldDeclarationDetector.ISSUE)
-        issueList.add(ComposeCallOrderDetector.ISSUE)
+        //rx chain issues
+        issueList.add(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
+        issueList.add(ComposeCallOrderDetector.MULTIPLE_COMPOSE_CALLS_ISSUE)
+        issueList.add(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
+        issueList.add(ComposeCallOrderDetector.MISSING_SUBSCRIBE_ON_ISSUE)
     }
 
     override fun getIssues(): List<Issue> {
