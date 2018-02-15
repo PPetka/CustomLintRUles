@@ -3,6 +3,7 @@ package com.ppetka.samples.lintules
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.ppetka.samples.lintrules.detector.ComposeCallOrderDetector
+import com.ppetka.samples.lintules.libs.ExternalLibrarys.Companion.rxAndroid2
 import com.ppetka.samples.lintules.libs.ExternalLibrarys.Companion.rxJava2
 import org.junit.Test
 
@@ -49,9 +50,12 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun bComposeBeforeObserveOn() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -72,16 +76,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: WrongComposeCallOrder [WrongComposeCallOrder]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:10: Error: WrongComposeCallOrder [WrongComposeCallOrder]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -92,7 +90,9 @@ class ComposeCallOrderDetectorTest {
         lint().allowCompilationErrors()
                 .files(transoferCLS, rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -112,16 +112,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: WrongComposeCallOrder [WrongComposeCallOrder]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:9: Error: WrongComposeCallOrder [WrongComposeCallOrder]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -152,12 +146,6 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
                 .run()
@@ -167,9 +155,12 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun mComposeAfterObserveOn() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxJava2(), rxAndroid2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -190,12 +181,6 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
                 .run()
@@ -205,9 +190,13 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun multipleSubscribeOnCalls() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxJava2(), rxAndroid2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
+          |
           |
           |class S{
           |
@@ -229,16 +218,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:11: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -247,9 +230,12 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun multipleSubscribeOnCalls2() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -271,16 +257,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:10: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -289,9 +269,12 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun multipleSpecificComposeCalls() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -313,16 +296,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_COMPOSE_CALLS_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: MultipleComposeOn [MultipleComposeOn]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:10: Error: MultipleComposeOn [MultipleComposeOn]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -357,12 +334,6 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_COMPOSE_CALLS_ISSUE)
                 .run()
@@ -372,9 +343,11 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun missingSubscribeOn() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -394,16 +367,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MISSING_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: MissingSubscribeOn [MissingSubscribeOn]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:9: Error: MissingSubscribeOn [MissingSubscribeOn]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -412,9 +379,12 @@ class ComposeCallOrderDetectorTest {
     @Test
     fun bMultipleThreadSwitching() {
         lint().allowCompilationErrors()
-                .files(transoferCLS, rxJava2(), java("""
+                .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
           |package com.ppetka.samples.customlintrules;
-          |import fooo.tran;
+          |
+          |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
           |
           |class S{
           |
@@ -437,16 +407,10 @@ class ComposeCallOrderDetectorTest {
           |          });
           |          thirdMethod();
           |}
-          |
-          |private void thirdMethod(){
-          |
-          | AtomicInteger a = new AtomicInteger(4);
-          |}
-          |
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:7: Error: WrongComposeCallOrder [WrongComposeCallOrder]\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:10: Error: WrongComposeCallOrder [WrongComposeCallOrder]\n" +
                         "     Single.just(\"BOSS\")\n" +
                         "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())

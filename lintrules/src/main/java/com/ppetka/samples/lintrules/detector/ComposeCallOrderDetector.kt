@@ -2,6 +2,8 @@ package com.ppetka.samples.lintrules.detector
 
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiClassType
 import org.jetbrains.uast.*
 import org.jetbrains.uast.util.isMethodCall
 import java.util.*
@@ -11,19 +13,29 @@ import kotlin.collections.ArrayList
  * Created by Przemysław Petka on 04-Feb-18.
  */
 class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
+
+    /*
+
+              |import io.reactivex.schedulers.Schedulers;
+          |import io.reactivex.android.schedulers.AndroidSchedulers;
+          |import fooo.tran.TranHolder;
+    * */
     companion object {
+        const val SCHEDULERS = "io.reactivex.schedulers.Schedulers"
+        const val ANDR_SCHEDULERS = "io.reactivex.android.schedulers.AndroidSchedulers"
+        const val DESIRED_CLS = "fooo.tran.TranHolder"
+
+        const val DESIRED_CLS_METHOD = "asd"
+
         const val RX_SUBSCRIBEON = "subscribeOn"
         const val RX_OBSERVEON = "observeOn"
-
-        const val SCHEDULERS = "Schedulers"
-        const val ANDR_SCHEDULERS = "AndroidSchedulers"
+        const val RX_COMPOSE = "compose"
 
         const val SCHE_CALL_IO = "io"
         const val SCHE_CALL_NEWTHREAD = "newThread"
         const val SCHE_CALL_COMPUTATION = "computation"
         const val SCHE_CALL_MAINTHREAD = "mainThread"
 
-        private const val SOME_CLS = "com.ppetka.samples.customlintrules.S"
 
         val WRONG_COMPOSE_CALL_ORDER_ISSUE = Issue.create("WrongComposeCallOrder",
                 "WrongComposeCallOrder",
@@ -159,7 +171,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
         }
 
         private fun containsCompose(quaRefExpression: UQualifiedReferenceExpression): Boolean {
-            val composeInChainIndexes: List<Triple<Int, String, String>> = RxHelper.getChainExpressionIndex(quaRefExpression, "compose", listOf("TranHolder"), listOf("asd"))
+            val composeInChainIndexes: List<Triple<Int, String, String>> = RxHelper.getChainExpressionIndex(quaRefExpression, RX_COMPOSE, listOf(DESIRED_CLS), listOf(DESIRED_CLS_METHOD))
 
             val composeListSize = composeInChainIndexes.size
             if (composeListSize == 1) {
@@ -183,7 +195,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
             expressionList.forEachIndexed { index, uExpression ->
                 if (uExpression is UCallExpression) {
                     if (uExpression.methodName == outerMethodName) {
-                        val classMethod: Pair<String, String>? = isSearchedCallExpression(uExpression, innerMethodNames, innerClassName)
+                        val classMethod: Pair<String, String>? = callMatchesAtLeastOneOfMethods(uExpression, innerMethodNames, innerClassName)
                         classMethod?.let {
                             indexClassMethod.add(Triple(index, classMethod.first, classMethod.second))
                         }
@@ -197,12 +209,15 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
 
         //return className , methodName
-        private fun isSearchedCallExpression(callExpr: UCallExpression, mthdNames: List<String>, clsNames: List<String>): Pair<String, String>? {
+        private fun callMatchesAtLeastOneOfMethods(callExpr: UCallExpression, mthdNames: List<String>, clsNames: List<String>): Pair<String, String>? {
             println("       mcall ${callExpr.isMethodCall()} expression: $callExpr , mthdNames: $mthdNames, clsNames: $clsNames")
             val listSize: Int = callExpr.valueArguments.size
             if (listSize == 1) {
                 val firstArg: UExpression = callExpr.valueArguments[0]
+
+                println("       AAAAA CANO TEXT: ${firstArg.getExpressionType()?.canonicalText}, BBBBB: internal cano text ${firstArg.getExpressionType()?.internalCanonicalText}")
                 if (firstArg is UQualifiedReferenceExpression) {
+                    println("       CCCCCCCCC CANO TEXT: ${firstArg.getExpressionType()?.canonicalText}, DDDDDDDDDDDd: internal cano text ${firstArg.asRecursiveLogString()}")
                     val paramExprQuaChain: List<UExpression> = firstArg.getOutermostQualified().getQualifiedChain()
 
                     var isDesiredClass = false
@@ -212,9 +227,17 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                     paramExprQuaChain.forEach {
                         when (it) {
                             is USimpleNameReferenceExpression -> {
-                                isDesiredClass = (clsNames.contains(it.identifier))
-                                if (isDesiredClass) {
-                                    clsName = it.identifier
+                                println("lets try to resolve, resolved name: ${it.resolvedName}, resolved ${it.resolve()} , resolvedtouelement: ${it.resolveToUElement()} ")
+                                it.resolveToUElement()?.let {
+                                    if (it is UClass) {
+                                        isDesiredClass = (clsNames.contains(it.qualifiedName))
+                                        if (isDesiredClass) {
+                                            it.qualifiedName?.let { clsName = it }
+                                        }
+                                        println("is UClass: QuaName; ${it.qualifiedName}")
+                                    } else {
+                                        println("not a UClass")
+                                    }
                                 }
                                 println("               uSimpNameRefExpr: " + it.identifier)
                             }
