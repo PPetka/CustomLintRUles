@@ -228,45 +228,6 @@ class ComposeCallOrderDetectorTest {
     }
 
     @Test
-    fun multipleSubscribeOnCalls2() {
-        lint().allowCompilationErrors()
-                .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
-          |package com.ppetka.samples.customlintrules;
-          |
-          |import io.reactivex.schedulers.Schedulers;
-          |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
-          |
-          |class S{
-          |
-          |public void someMethooooooood() {
-          |     Single.just("BOSS")
-          |         .subscribeOn(Schedulers.io())
-          |         .observeOn(AndroidSchedulers.mainThread())
-          |         .subscribeOn(AndroidSchedulers.mainThread())
-          |         .compose(TranHolder.asd())
-          |         .subscribe(new SingleObserver<String>() {
-          |             @Override
-          |             public void onSubscribe(Disposable d) {}
-          |
-          |             @Override
-          |             public void onSuccess(String s) {}
-          |
-          |             @Override
-          |             public void onError(Throwable e) {}
-          |          });
-          |          thirdMethod();
-          |}
-          |}""".trimMargin()))
-                .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
-                .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:9: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
-                        "public void someMethooooooood() {\n" +
-                        "                                ^\n" +
-                        "1 errors, 0 warnings\n".trimMargin())
-    }
-
-    @Test
     fun multipleSpecificComposeCalls() {
         lint().allowCompilationErrors()
                 .files(transoferCLS, rxAndroid2(), rxJava2(), java("""
