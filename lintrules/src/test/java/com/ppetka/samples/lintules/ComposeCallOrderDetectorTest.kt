@@ -221,9 +221,9 @@ class ComposeCallOrderDetectorTest {
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:11: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
-                        "     Single.just(\"BOSS\")\n" +
-                        "     ^\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:10: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
+                        "public void someMethooooooood() {\n" +
+                        "                                ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
     }
 
@@ -260,9 +260,9 @@ class ComposeCallOrderDetectorTest {
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:10: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
-                        "     Single.just(\"BOSS\")\n" +
-                        "     ^\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:9: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
+                        "public void someMethooooooood() {\n" +
+                        "                                ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
     }
 
@@ -370,9 +370,9 @@ class ComposeCallOrderDetectorTest {
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MISSING_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/com/ppetka/samples/customlintrules/S.java:9: Error: MissingSubscribeOn [MissingSubscribeOn]\n" +
-                        "     Single.just(\"BOSS\")\n" +
-                        "     ^\n" +
+                .expect("src/com/ppetka/samples/customlintrules/S.java:8: Error: MissingSubscribeOn [MissingSubscribeOn]\n" +
+                        "public void someMethooooooood() {\n" +
+                        "^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
     }
 

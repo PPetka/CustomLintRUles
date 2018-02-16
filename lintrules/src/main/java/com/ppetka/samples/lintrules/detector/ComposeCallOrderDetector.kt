@@ -2,8 +2,6 @@ package com.ppetka.samples.lintrules.detector
 
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiClassType
 import org.jetbrains.uast.*
 import org.jetbrains.uast.util.isMethodCall
 import java.util.*
@@ -14,17 +12,11 @@ import kotlin.collections.ArrayList
  */
 class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
-    /*
-
-              |import io.reactivex.schedulers.Schedulers;
-          |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
-    * */
     companion object {
         const val SCHEDULERS = "io.reactivex.schedulers.Schedulers"
         const val ANDR_SCHEDULERS = "io.reactivex.android.schedulers.AndroidSchedulers"
-        const val DESIRED_CLS = "fooo.tran.TranHolder"
 
+        const val DESIRED_CLS = "fooo.tran.TranHolder"
         const val DESIRED_CLS_METHOD = "asd"
 
         const val RX_SUBSCRIBEON = "subscribeOn"
@@ -72,6 +64,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
 
     override fun getApplicableUastTypes(): List<Class<out UElement>> {
+
         return listOf(UMethod::class.java, UCallExpression::class.java)
     }
 
@@ -100,16 +93,18 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 outermostQuaExpressionList.add(quaReferenceExpr)
 
                 if (containsCompose(quaReferenceExpr)) {
+                    println("after compose")
+                    val aaa = quaReferenceExpr
                     val subscribeOnThread: THREAD? = getSubscribeOnThread(quaReferenceExpr)
                     println("           subscribeOnThread: $subscribeOnThread")
                     subscribeOnThread?.let {
                         currentThread = subscribeOnThread
-                        var observeOnCalls: List<Triple<Int, String, String>> = RxHelper.getChainExpressionIndex(
-                                quaReferenceExpr,
-                                RX_OBSERVEON,
-                                listOf(SCHEDULERS, ANDR_SCHEDULERS),
-                                listOf(SCHE_CALL_IO, SCHE_CALL_NEWTHREAD, SCHE_CALL_COMPUTATION, SCHE_CALL_MAINTHREAD))
 
+                        var observeOnCalls: List<Triple<Int, USimpleNameReferenceExpression, UCallExpression>> = RxHelper.getChainExpressionIndex(
+                                quaRefExpression = quaReferenceExpr,
+                                outerMethodName = RX_OBSERVEON,
+                                innerClassName = listOf(SCHEDULERS, ANDR_SCHEDULERS),
+                                innerMethodNames = listOf(SCHE_CALL_IO, SCHE_CALL_NEWTHREAD, SCHE_CALL_COMPUTATION, SCHE_CALL_MAINTHREAD))
 
                         observeOnCalls = observeOnCalls.filter { it.first < composeIndex }
                         println("observeOnCalls size: ${observeOnCalls.size}, lastIndex: ${observeOnCalls.lastIndex}")
@@ -117,9 +112,10 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                             val triple = observeOnCalls[observeOnCalls.lastIndex]
                             println("observe on before compose: $triple")
 
-                            if (triple.second == SCHEDULERS) {
+                            val clsName = triple.second.getQualifiedName()
+                            if (clsName == SCHEDULERS) {
                                 currentThread = THREAD.BACKGROUND
-                            } else if (triple.second == ANDR_SCHEDULERS) {
+                            } else if (clsName == ANDR_SCHEDULERS) {
                                 currentThread = THREAD.MAIN
                             }
                         } else {
@@ -129,7 +125,9 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                         //finally check the compose call thread
                         if (currentThread == THREAD.BACKGROUND) {
                             println("compose called on BACKGROUND thread")
-                            javaContext.report(WRONG_COMPOSE_CALL_ORDER_ISSUE, quaReferenceExpr, javaContext.getLocation(quaReferenceExpr), WRONG_COMPOSE_CALL_ORDER_ISSUE.getBriefDescription(TextFormat.TEXT))
+                            aaa?.let {
+                                javaContext.report(WRONG_COMPOSE_CALL_ORDER_ISSUE, aaa, javaContext.getLocation(aaa), WRONG_COMPOSE_CALL_ORDER_ISSUE.getBriefDescription(TextFormat.TEXT))
+                            }
                             //report compose called on background thread
                         } else {
                             println("compose called on MAIN thread")
@@ -140,42 +138,51 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
         }
 
         private fun getSubscribeOnThread(quaRefExpression: UQualifiedReferenceExpression): THREAD? {
-            //todo check full class
-            //io.reactivex.schedulers.Schedulers
-            //io.reactivex.android.schedulers.AndroidSchedulers
+            println("getSubscribeOnThread $quaRefExpression")
             val qualifiedChain = quaRefExpression.getQualifiedChain()
 
-            val subscribeOnCallSite: List<Triple<Int, String, String>> = RxHelper.getChainExpressionIndex(
-                    quaRefExpression,
-                    RX_SUBSCRIBEON,
-                    listOf(SCHEDULERS, ANDR_SCHEDULERS),
-                    listOf(SCHE_CALL_IO, SCHE_CALL_NEWTHREAD, SCHE_CALL_COMPUTATION, SCHE_CALL_MAINTHREAD))
-
+            val subscribeOnCallSite: List<Triple<Int, USimpleNameReferenceExpression, UCallExpression>> = RxHelper.getChainExpressionIndex(
+                    quaRefExpression = quaRefExpression,
+                    outerMethodName = RX_SUBSCRIBEON,
+                    innerClassName = listOf(SCHEDULERS, ANDR_SCHEDULERS),
+                    innerMethodNames = listOf(SCHE_CALL_IO, SCHE_CALL_NEWTHREAD, SCHE_CALL_COMPUTATION, SCHE_CALL_MAINTHREAD))
+            println("getSubscribeOnThread() after  RxHelper.getChainExpressionIndex call:")
             val subOnListSize = subscribeOnCallSite.size
             if (subOnListSize == 1) {
-                if (subscribeOnCallSite[0].second == SCHEDULERS) {
+                println("getSubscribeOnThread(), subOnListSize: $subOnListSize, listToStr: $subscribeOnCallSite, clsName: ${subscribeOnCallSite[0].second.getQualifiedName()}, method, ${subscribeOnCallSite[0].third.methodName}")
+                val clsName: String? = subscribeOnCallSite[0].second.getQualifiedName()
+                println("getSubscribeOnThread(), clsName: $clsName")
+                if (clsName == SCHEDULERS) {
                     return THREAD.BACKGROUND
-                } else if (subscribeOnCallSite[0].second == ANDR_SCHEDULERS) {
+                } else if (clsName == ANDR_SCHEDULERS) {
                     return THREAD.MAIN
                 }
             } else if (subOnListSize > 1) {
-                //report multiple sub on calls
-                println("       subscribeOn more than 1 expression: quaChain: $qualifiedChain")
-                javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, qualifiedChain[subscribeOnCallSite[0].first], javaContext.getLocation(qualifiedChain[subscribeOnCallSite[0].first]), MULTIPLE_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
+                quaRefExpression.uastParent?.let {
+                    //report multiple sub on calls
+                    println("       subscribeOn more than 1 expression: quaChain: ${it}")
+                    javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, it, javaContext.getLocation(it), MULTIPLE_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
+
+                }
             } else {
-                println("       subscribeOn missing: quaChain: $qualifiedChain")
-                javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, quaRefExpression, javaContext.getLocation(quaRefExpression), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
+                var parent = quaRefExpression.uastParent
+                parent?.let { uuu ->
+                    uuu.uastParent?.let {
+                        println("       subscribeOn missing: quaChain: $it")
+                        javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, it, javaContext.getLocation(it), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
+                    }
+                }
                 //report missing subOnCall
             }
             return null
         }
 
         private fun containsCompose(quaRefExpression: UQualifiedReferenceExpression): Boolean {
-            val composeInChainIndexes: List<Triple<Int, String, String>> = RxHelper.getChainExpressionIndex(quaRefExpression, RX_COMPOSE, listOf(DESIRED_CLS), listOf(DESIRED_CLS_METHOD))
+            val composeInChainIndexes: List<Triple<Int, USimpleNameReferenceExpression, UCallExpression>> = RxHelper.getChainExpressionIndex(quaRefExpression, RX_COMPOSE, listOf(DESIRED_CLS), listOf(DESIRED_CLS_METHOD))
 
             val composeListSize = composeInChainIndexes.size
             if (composeListSize == 1) {
-                println("compose size 1")
+                println("compose size 1: compose list: $composeInChainIndexes")
                 composeIndex = composeInChainIndexes[0].first
                 return true
             } else if (composeListSize > 1) {
@@ -185,31 +192,39 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
             }
             return false
         }
+
+        private fun getClsName(clsExpression: USimpleNameReferenceExpression): String? {
+            if (clsExpression is UClass) {
+                return clsExpression.qualifiedName
+            }
+            return null
+        }
     }
 
     object RxHelper {
         //return index, innerClass, innerMethod
-        fun getChainExpressionIndex(quaRefExpression: UQualifiedReferenceExpression, outerMethodName: String, innerClassName: List<String>, innerMethodNames: List<String>): List<Triple<Int, String, String>> {
-            val indexClassMethod: MutableList<Triple<Int, String, String>> = ArrayList()
+        fun getChainExpressionIndex(quaRefExpression: UQualifiedReferenceExpression, outerMethodName: String, innerClassName: List<String>, innerMethodNames: List<String>): List<Triple<Int, USimpleNameReferenceExpression, UCallExpression>> {
+            val indexClassMethod: MutableList<Triple<Int, USimpleNameReferenceExpression, UCallExpression>> = ArrayList()
             val expressionList = quaRefExpression.getQualifiedChain()
             expressionList.forEachIndexed { index, uExpression ->
                 if (uExpression is UCallExpression) {
                     if (uExpression.methodName == outerMethodName) {
-                        val classMethod: Pair<String, String>? = callMatchesAtLeastOneOfMethods(uExpression, innerMethodNames, innerClassName)
-                        classMethod?.let {
-                            indexClassMethod.add(Triple(index, classMethod.first, classMethod.second))
+                        val matchedExpression: Pair<USimpleNameReferenceExpression, UCallExpression>? = callMatchesAtLeastOneOfMethods(uExpression, innerMethodNames, innerClassName)
+                        matchedExpression?.let {
+                            println("getChainExpressionIndex(), matchedExpression: $matchedExpression , clsName: ${matchedExpression.first.getQualifiedName()}, methodName: ${matchedExpression.second.methodName}")
+                            indexClassMethod.add(Triple(index, matchedExpression.first, matchedExpression.second))
                         }
                     }
                 } else {
                     println("Not an uCallExpression: " + uExpression.toString())
                 }
             }
+            println("getChainExpressionIndex() return: indexClassMethod: $indexClassMethod ")
             return indexClassMethod
         }
 
-
         //return className , methodName
-        private fun callMatchesAtLeastOneOfMethods(callExpr: UCallExpression, mthdNames: List<String>, clsNames: List<String>): Pair<String, String>? {
+        private fun callMatchesAtLeastOneOfMethods(callExpr: UCallExpression, mthdNames: List<String>, clsNames: List<String>): Pair<USimpleNameReferenceExpression, UCallExpression>? {
             println("       mcall ${callExpr.isMethodCall()} expression: $callExpr , mthdNames: $mthdNames, clsNames: $clsNames")
             val listSize: Int = callExpr.valueArguments.size
             if (listSize == 1) {
@@ -220,54 +235,48 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                     println("       CCCCCCCCC CANO TEXT: ${firstArg.getExpressionType()?.canonicalText}, DDDDDDDDDDDd: internal cano text ${firstArg.asRecursiveLogString()}")
                     val paramExprQuaChain: List<UExpression> = firstArg.getOutermostQualified().getQualifiedChain()
 
-                    var isDesiredClass = false
-                    var isDesiredMethod = false
-                    var mthdName: String = ""
-                    var clsName: String = ""
-                    paramExprQuaChain.forEach {
-                        when (it) {
+                    var mthd: UCallExpression? = null
+                    var cls: USimpleNameReferenceExpression? = null
+                    paramExprQuaChain.forEach { quaChild ->
+                        when (quaChild) {
                             is USimpleNameReferenceExpression -> {
-                                println("lets try to resolve, resolved name: ${it.resolvedName}, resolved ${it.resolve()} , resolvedtouelement: ${it.resolveToUElement()} ")
-                                it.resolveToUElement()?.let {
+                                println("lets try to resolve, resolved name: ${quaChild.resolvedName}, resolved ${quaChild.resolve()} , resolvedtouelement: ${quaChild.resolveToUElement()} ")
+                                quaChild.resolveToUElement()?.let {
                                     if (it is UClass) {
-                                        isDesiredClass = (clsNames.contains(it.qualifiedName))
+                                        val isDesiredClass: Boolean = (clsNames.contains(it.qualifiedName))
                                         if (isDesiredClass) {
-                                            it.qualifiedName?.let { clsName = it }
+                                            cls = quaChild
                                         }
                                         println("is UClass: QuaName; ${it.qualifiedName}")
                                     } else {
                                         println("not a UClass")
                                     }
                                 }
-                                println("               uSimpNameRefExpr: " + it.identifier)
+                                println("               uSimpNameRefExpr: " + quaChild.identifier)
+
                             }
                             is UCallExpression -> {
-                                isDesiredMethod = mthdNames.contains(it.methodName)
+                                val isDesiredMethod = mthdNames.contains(quaChild.methodName)
                                 if (isDesiredMethod) {
-                                    it.methodName?.let {
-                                        mthdName = it
-                                    }
+                                    mthd = quaChild
                                 }
-                                println("               uCallExpr: " + it.methodName)
+                                println("               uCallExpr: " + quaChild.methodName)
                             }
                         }
                     }
-                    //     return isDesiredClass && isDesiredMethod
-                    if (isDesiredClass && isDesiredMethod) {
-                        println("                   got it: clsName: $clsName, methodName: $mthdName")
-                        return Pair(clsName, mthdName)
+
+                    if (mthd != null && cls != null) {
+                        println("                   got it: clsName: ${cls.getQualifiedName()}, methodName: ${mthd?.methodName}")
+                        mthd?.let { m ->
+                            cls?.let { c ->
+                                return Pair(c, m)
+                            }
+                        }
                     } else {
-                        println("                   not this: $clsName, $mthdName")
+                        println("                   not this: clsName: ${cls.getQualifiedName()}, methodName: ${mthd?.methodName}")
                     }
                 }
-
-                println("expressionType: " + firstArg.getExpressionType().toString())
-                println(firstArg.asRecursiveLogString())
-
-                println("Identifier: " + UastLintUtils.getIdentifier(firstArg))
             }
-
-            println("\n")
             return null
         }
     }
