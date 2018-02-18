@@ -74,7 +74,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
@@ -110,7 +109,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
@@ -144,7 +142,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
@@ -179,7 +176,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
@@ -216,7 +212,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
@@ -255,7 +250,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_COMPOSE_CALLS_ISSUE)
@@ -293,7 +287,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_COMPOSE_CALLS_ISSUE)
@@ -326,7 +319,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MISSING_SUBSCRIBE_ON_ISSUE)
@@ -366,7 +358,6 @@ class ComposeCallOrderDetectorTest {
           |             @Override
           |             public void onError(Throwable e) {}
           |          });
-          |          thirdMethod();
           |}
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.WRONG_COMPOSE_CALL_ORDER_ISSUE)
