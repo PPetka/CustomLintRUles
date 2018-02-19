@@ -5,12 +5,12 @@ import com.android.tools.lint.detector.api.*
 import org.jetbrains.uast.*
 import org.jetbrains.uast.util.isMethodCall
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 /**
  * Created by Przemysław Petka on 04-Feb-18.
  */
+
 class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
     enum class THREAD {
@@ -77,7 +77,6 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
     inner class AnaliseRxExpressionDetector(private val javaContext: JavaContext) : UElementHandler() {
         var uniqueQuaRefs: MutableSet<UQualifiedReferenceExpression> = HashSet()
-
         //debug
         var ctr = 1
 
@@ -216,7 +215,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
     }
 
-    fun UCallExpression.getSearchedCall(clsNames: List<String>, mthdNames: List<String>): Pair<USimpleNameReferenceExpression, UCallExpression>? {
+    private fun UCallExpression.getSearchedCall(clsNames: List<String>, mthdNames: List<String>): Pair<USimpleNameReferenceExpression, UCallExpression>? {
         println("           getSearchedCall() mcall ${this.isMethodCall()} expression: $this , mthdNames: $mthdNames, clsNames: $clsNames")
         val listSize: Int = this.valueArguments.size
         if (listSize == 1) {
