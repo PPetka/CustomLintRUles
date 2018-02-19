@@ -21,8 +21,8 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
         const val SCHEDULERS = "io.reactivex.schedulers.Schedulers"
         const val ANDR_SCHEDULERS = "io.reactivex.android.schedulers.AndroidSchedulers"
 
-        const val DESIRED_CLS = "fooo.tran.TranHolder"
-        const val DESIRED_CLS_METHOD = "asd"
+        const val DESIRED_CLS = "com.ppetka.samples.customlintrules.SomeCls"
+        const val DESIRED_CLS_METHOD = "composeSomething"
 
         const val RX_SUBSCRIBEON = "subscribeOn"
         const val RX_OBSERVEON = "observeOn"
@@ -56,7 +56,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 Category.CORRECTNESS,
                 10,
                 Severity.ERROR,
-                Implementation(ComposeCallOrderDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE)))
+                Implementation(ComposeCallOrderDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE))).addMoreInfo("MOOOOOOOOOOOOOOOOOOOOOOORE")
 
         val MULTIPLE_COMPOSE_CALLS_ISSUE = Issue.create("MultipleComposeOn",
                 "MultipleComposeOn",
@@ -126,8 +126,10 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                             //finally check the compose call thread
                             if (currentThread == THREAD.BACKGROUND) {
                                 println("visitQualifiedReferenceExpression(), FINALY compose called on BACKGROUND thread")
+
                                 outermostQueRefExpr.let {
-                                    javaContext.report(WRONG_COMPOSE_CALL_ORDER_ISSUE, outermostQueRefExpr, javaContext.getLocation(outermostQueRefExpr), WRONG_COMPOSE_CALL_ORDER_ISSUE.getBriefDescription(TextFormat.TEXT))
+                                    val composeCall = outermostQueRefExpr.getQualifiedChain()[composeIndex]
+                                    javaContext.report(WRONG_COMPOSE_CALL_ORDER_ISSUE, composeCall, javaContext.getLocation(composeCall), WRONG_COMPOSE_CALL_ORDER_ISSUE.getBriefDescription(TextFormat.TEXT))
                                 }
                                 //report compose called on background thread
                             } else {
@@ -158,17 +160,19 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                     return THREAD.MAIN
                 }
             } else if (subOnListSize > 1) {
-                quaRefExpression.uastParent?.let {
+                quaRefExpression.let {
                     //report multiple sub on calls
                     println("       checkSubscribeOnCallThread(), subscribeOn more than 1 expression: quaChain: ${it}")
-                    javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, it, javaContext.getLocation(it), MULTIPLE_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
 
+                    var callParent: UExpression = subscribeOnCallSite[subOnListSize - 1].third
+                    callParent = callParent.getParentOfType(true, UCallExpression::class.java) ?: callParent
+                    javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(callParent), callParent.toString())
                 }
             } else {
-                quaRefExpression.uastParent?.let { uuu ->
-                    uuu.uastParent?.let {
-                        println("       checkSubscribeOnCallThread(), subscribeOn missing: quaChain: $it")
-                        javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, it, javaContext.getLocation(it), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
+                quaRefExpression.let { quaExpr ->
+                    quaExpr.let {
+                        println("       checkSubscribeOnCallThread(), subscribeOn missing: quaChain: ${quaExpr.asLogString()}")
+                        javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(quaExpr), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
                     }
                 }
                 //report missing subOnCall

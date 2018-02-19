@@ -97,7 +97,7 @@ class ComposeCallOrderDetectorTest {
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
-          |         .subscribeOn(Schedulers.computation())
+          |         .subscribeOn(Schedulers.<String>computation())
           |         .compose(SomeCls.composeSomething())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
@@ -323,9 +323,9 @@ class ComposeCallOrderDetectorTest {
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MISSING_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/vvvvvvv/Sqqw.java:8: Error: MissingSubscribeOn [MissingSubscribeOn]\n" +
-                        "public void someMethooooooood() {\n" +
-                        "^\n" +
+                .expect("src/vvvvvvv/Sqqw.java:9: Error: MissingSubscribeOn [MissingSubscribeOn]\n" +
+                        "     Single.just(\"BOSS\")\n" +
+                        "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
     }
 
