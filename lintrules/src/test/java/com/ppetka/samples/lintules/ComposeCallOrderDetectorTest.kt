@@ -14,11 +14,11 @@ import org.junit.Test
 class ComposeCallOrderDetectorTest {
 
     val transoferCLS = java("""
-          |package fooo.tran;
+          |package com.ppetka.samples.customlintrules;
           |
-          |class TranHolder{
+          |class SomeCls{
           |
-          |public static <T> SingleTransformer<T, T> asd() {
+          |public static <T> SingleTransformer<T, T> composeSomething() {
           |      Integer innnn = new Interger(4);
           |      SingleTransformer s = new SingleTransformer() {
           |            @Override
@@ -55,14 +55,14 @@ class ComposeCallOrderDetectorTest {
           |
           |import io.reactivex.schedulers.Schedulers;
           |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |class Shop{
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
           |         .subscribeOn(Schedulers.newThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .observeOn(AndroidSchedulers.mainThread())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
@@ -91,14 +91,14 @@ class ComposeCallOrderDetectorTest {
           |package oouuuuuuuuuuuuu.d;
           |
           |import io.reactivex.schedulers.Schedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |class Flask{
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
           |         .subscribeOn(Schedulers.computation())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
           |             public void onSubscribe(Disposable d) {}
@@ -124,14 +124,14 @@ class ComposeCallOrderDetectorTest {
         lint().allowCompilationErrors()
                 .files(transoferCLS, rxJava2(), java("""
           |package vvvvvvvvbnbnbn;
-          |import fooo.tran;
+          |import com.ppetka.samples.customlintrules;
           |
           |class BurningSpider{
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
           |         .subscribeOn(AndroidSchedulers.mainThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
           |             public void onSubscribe(Disposable d) {}
@@ -153,11 +153,11 @@ class ComposeCallOrderDetectorTest {
     fun mComposeAfterObserveOn() {
         lint().allowCompilationErrors()
                 .files(transoferCLS, rxJava2(), rxAndroid2(), java("""
-          |package asddd;
+          |package composeSomethingdd;
           |
           |import io.reactivex.schedulers.Schedulers;
           |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |class SSSS{
           |
@@ -165,7 +165,7 @@ class ComposeCallOrderDetectorTest {
           |     Single.just("BOSS")
           |         .subscribeOn(Schedulers.io())
           |         .observeOn(AndroidSchedulers.mainThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
           |             public void onSubscribe(Disposable d) {}
@@ -191,16 +191,16 @@ class ComposeCallOrderDetectorTest {
           |
           |import io.reactivex.schedulers.Schedulers;
           |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |
-          |class SAsd{
+          |class ScomposeSomething{
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
           |         .subscribeOn(Schedulers.io())
           |         .observeOn(AndroidSchedulers.mainThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .subscribeOn(Schedulers.io())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
@@ -216,7 +216,7 @@ class ComposeCallOrderDetectorTest {
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/cdddsadad/SAsd.java:10: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
+                .expect("src/cdddsadad/ScomposeSomething.java:10: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
                         "public void someMethooooooood() {\n" +
                         "                                ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
@@ -230,16 +230,16 @@ class ComposeCallOrderDetectorTest {
           |
           |import io.reactivex.schedulers.Schedulers;
           |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |class Saaaaaaaa{
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
           |         .subscribeOn(Schedulers.io())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .observeOn(AndroidSchedulers.mainThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
           |             public void onSubscribe(Disposable d) {}
@@ -265,7 +265,7 @@ class ComposeCallOrderDetectorTest {
         lint().allowCompilationErrors()
                 .files(otherTransformCLS, transoferCLS, rxJava2(), java("""
           |package fffffff;
-          |import fooo.tran;
+          |import com.ppetka.samples.customlintrules;
           |
           |class Weedjklasjda{
           |
@@ -275,7 +275,7 @@ class ComposeCallOrderDetectorTest {
           |         .subscribeOn(Schedulers.io())
           |         .observeOn(AndroidSchedulers.mainThread())
           |         .compose(AnotherTransformerCls.fooBar())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .compose(AnotherTransformerCls.fooBar())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
@@ -301,14 +301,14 @@ class ComposeCallOrderDetectorTest {
           |package vvvvvvv;
           |
           |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |class Sqqw{
           |
           |public void someMethooooooood() {
           |     Single.just("BOSS")
           |         .observeOn(AndroidSchedulers.mainThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
           |             public void onSubscribe(Disposable d) {}
@@ -337,7 +337,7 @@ class ComposeCallOrderDetectorTest {
           |
           |import io.reactivex.schedulers.Schedulers;
           |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |import com.ppetka.samples.customlintrules.SomeCls;
           |
           |class TR{
           |
@@ -346,7 +346,7 @@ class ComposeCallOrderDetectorTest {
           |         .subscribeOn(Schedulers.io())
           |         .observeOn(AndroidSchedulers.mainThread())
           |         .observeOn(Schedulers.newThread())
-          |         .compose(TranHolder.asd())
+          |         .compose(SomeCls.composeSomething())
           |         .observeOn(AndroidSchedulers.mainThread())
           |         .subscribe(new SingleObserver<String>() {
           |             @Override
