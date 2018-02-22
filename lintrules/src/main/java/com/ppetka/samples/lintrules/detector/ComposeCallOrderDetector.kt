@@ -160,20 +160,16 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                     return THREAD.MAIN
                 }
             } else if (subOnListSize > 1) {
-                quaRefExpression.let {
-                    //report multiple sub on calls
-                    println("       checkSubscribeOnCallThread(), subscribeOn more than 1 expression: quaChain: ${it}")
+                //report multiple sub on calls
+                println("       checkSubscribeOnCallThread(), subscribeOn more than 1 expression: quaChain: ${quaRefExpression}")
+                var callParent: UExpression = subscribeOnCallSite[subOnListSize - 1].third
+                callParent = callParent.getParentOfType(true, UCallExpression::class.java) ?: callParent
+                javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(callParent), callParent.toString())
 
-                    var callParent: UExpression = subscribeOnCallSite[subOnListSize - 1].third
-                    callParent = callParent.getParentOfType(true, UCallExpression::class.java) ?: callParent
-                    javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(callParent), callParent.toString())
-                }
             } else {
-                quaRefExpression.let { quaExpr ->
-                    quaExpr.let {
-                        println("       checkSubscribeOnCallThread(), subscribeOn missing: quaChain: ${quaExpr.asLogString()}")
-                        javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(quaExpr), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
-                    }
+                quaRefExpression.let {
+                    println("       checkSubscribeOnCallThread(), subscribeOn missing: quaChain: ${quaRefExpression.asLogString()}")
+                    javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(quaRefExpression), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
                 }
                 //report missing subOnCall
             }
@@ -220,6 +216,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
     }
 
     private fun UCallExpression.getSearchedCall(clsNames: List<String>, mthdNames: List<String>): Pair<USimpleNameReferenceExpression, UCallExpression>? {
+        var pairResult: Pair<USimpleNameReferenceExpression, UCallExpression>? = null
         println("           getSearchedCall() mcall ${this.isMethodCall()} expression: $this , mthdNames: $mthdNames, clsNames: $clsNames")
         val listSize: Int = this.valueArguments.size
         if (listSize == 1) {
@@ -258,15 +255,26 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                         }
                     }
                 }
-                mthd?.let { m ->
-                    cls?.let { c ->
-                        println("           getSearchedCall(), FOUND: clsName: ${cls.getQualifiedName()}, methodName: ${mthd?.methodName}")
-                        return Pair(c, m)
-                    }
+
+                (cls to mthd).biLet { c, m ->
+                    println("           getSearchedCall(), FOUND: clsName: ${cls.getQualifiedName()}, methodName: ${mthd?.methodName}")
+                    pairResult = Pair(c, m)
                 }
             }
         }
         println("getSearchedCall() return null")
+        return pairResult
+    }
+
+    fun <T, U, R> Pair<T?, U?>.biLet(body: (T, U) -> R): R? {
+        val fst: T? = first
+        val scnd: U? = second
+        fst?.let { f ->
+            scnd?.let { u ->
+                return body(f, u)
+            }
+        }
         return null
     }
+
 }

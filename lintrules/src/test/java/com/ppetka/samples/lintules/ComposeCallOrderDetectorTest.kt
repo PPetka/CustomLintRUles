@@ -216,9 +216,9 @@ class ComposeCallOrderDetectorTest {
           |}""".trimMargin()))
                 .issues(ComposeCallOrderDetector.MULTIPLE_SUBSCRIBE_ON_ISSUE)
                 .run()
-                .expect("src/cdddsadad/ScomposeSomething.java:10: Error: MultipleSubscribeOn [MultipleSubscribeOn]\n" +
-                        "public void someMethooooooood() {\n" +
-                        "                                ^\n" +
+                .expect("src/cdddsadad/ScomposeSomething.java:11: Error: subscribeOn(Schedulers.io()) [MultipleSubscribeOn]\n" +
+                        "     Single.just(\"BOSS\")\n" +
+                        "     ^\n" +
                         "1 errors, 0 warnings\n".trimMargin())
     }
 
