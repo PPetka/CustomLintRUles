@@ -3,7 +3,6 @@ package com.ppetka.samples.lintrules.detector
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
 import org.jetbrains.uast.*
-import org.jetbrains.uast.util.isMethodCall
 import java.util.*
 import kotlin.collections.HashSet
 
@@ -34,7 +33,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
         const val SCHE_CALL_MAINTHREAD = "mainThread"
 
 
-        val WRONG_COMPOSE_CALL_ORDER_ISSUE = Issue.create("WrongComposeCallOrder",
+        val WRONG_COMPOSE_CALL_ORDER_ISSUE: Issue = Issue.create("WrongComposeCallOrder",
                 "WrongComposeCallOrder",
                 "\"WrongComposeCallOrder\"",
                 Category.CORRECTNESS,
@@ -42,7 +41,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 Severity.ERROR,
                 Implementation(ComposeCallOrderDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE)))
 
-        val MISSING_SUBSCRIBE_ON_ISSUE = Issue.create("MissingSubscribeOn",
+        val MISSING_SUBSCRIBE_ON_ISSUE: Issue = Issue.create("MissingSubscribeOn",
                 "MissingSubscribeOn",
                 "\"MissingSubscribeOn\"",
                 Category.CORRECTNESS,
@@ -50,7 +49,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 Severity.ERROR,
                 Implementation(ComposeCallOrderDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE)))
 
-        val MULTIPLE_SUBSCRIBE_ON_ISSUE = Issue.create("MultipleSubscribeOn",
+        val MULTIPLE_SUBSCRIBE_ON_ISSUE: Issue = Issue.create("MultipleSubscribeOn",
                 "MultipleSubscribeOn",
                 "\"MultipleSubscribeOn\"",
                 Category.CORRECTNESS,
@@ -58,7 +57,7 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 Severity.ERROR,
                 Implementation(ComposeCallOrderDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE))).addMoreInfo("MOOOOOOOOOOOOOOOOOOOOOOORE")
 
-        val MULTIPLE_COMPOSE_CALLS_ISSUE = Issue.create("MultipleComposeOn",
+        val MULTIPLE_COMPOSE_CALLS_ISSUE: Issue = Issue.create("MultipleComposeOn",
                 "MultipleComposeOn",
                 "\"MultipleComposeOn\"",
                 Category.CORRECTNESS,
@@ -77,8 +76,6 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
     inner class AnaliseRxExpressionDetector(private val javaContext: JavaContext) : UElementHandler() {
         var uniqueQuaRefs: MutableSet<UQualifiedReferenceExpression> = HashSet()
-        //debug
-        var ctr = 1
 
         override fun visitQualifiedReferenceExpression(quaReferenceExpr: UQualifiedReferenceExpression) {
             var currentThread: THREAD?
@@ -89,16 +86,9 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 if (outermostQueRefExpr !in uniqueQuaRefs) {
                     uniqueQuaRefs.add(outermostQueRefExpr)
 
-                    if (ctr == 1) {
-                        println("$ctr, ${outermostQueRefExpr.asRecursiveLogString()}")
-                    }
-                    println("$ctr, visitQualifiedReferenceExpression(), STARTING $outermostQueRefExpr")
-                    ctr++
-
                     composeIndex = getComposeCallIndex(outermostQueRefExpr)
                     if (composeIndex != 0) {
                         val subscribeOnCallThread: THREAD? = checkSubscribeOnCallThread(outermostQueRefExpr)
-                        println("visitQualifiedReferenceExpression(), subscribeOnCallThread: $subscribeOnCallThread")
                         subscribeOnCallThread?.let {
                             currentThread = subscribeOnCallThread
 
@@ -108,10 +98,8 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                                     innerMethodNames = listOf(SCHE_CALL_IO, SCHE_CALL_NEWTHREAD, SCHE_CALL_COMPUTATION, SCHE_CALL_MAINTHREAD))
 
                             observeOnCalls = observeOnCalls.filter { it.first < composeIndex }
-                            println("visitQualifiedReferenceExpression(), observeOnCalls size: ${observeOnCalls.size}, lastIndex: ${observeOnCalls.lastIndex}")
                             if (observeOnCalls.isNotEmpty()) {
                                 val observeOnBeforeComposeCall = observeOnCalls[observeOnCalls.lastIndex]
-                                println("visitQualifiedReferenceExpression(), observe on before compose: $observeOnBeforeComposeCall")
 
                                 val observeOnArgCls = observeOnBeforeComposeCall.second.getQualifiedName()
                                 if (observeOnArgCls == SCHEDULERS) {
@@ -119,41 +107,27 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                                 } else if (observeOnArgCls == ANDR_SCHEDULERS) {
                                     currentThread = THREAD.MAIN
                                 }
-                            } else {
-                                println("visitQualifiedReferenceExpression(), list is empty: compose index: $composeIndex")
                             }
-
                             //finally check the compose call thread
                             if (currentThread == THREAD.BACKGROUND) {
-                                println("visitQualifiedReferenceExpression(), FINALY compose called on BACKGROUND thread")
-
-                                outermostQueRefExpr.let {
-                                    val composeCall = outermostQueRefExpr.getQualifiedChain()[composeIndex]
-                                    javaContext.report(WRONG_COMPOSE_CALL_ORDER_ISSUE, composeCall, javaContext.getLocation(composeCall), WRONG_COMPOSE_CALL_ORDER_ISSUE.getBriefDescription(TextFormat.TEXT))
-                                }
-                                //report compose called on background thread
-                            } else {
-                                println("visitQualifiedReferenceExpression(), FINALY compose called on MAIN thread")
+                                val composeCall = outermostQueRefExpr.getQualifiedChain()[composeIndex]
+                                javaContext.report(WRONG_COMPOSE_CALL_ORDER_ISSUE, composeCall, javaContext.getLocation(composeCall), WRONG_COMPOSE_CALL_ORDER_ISSUE.getBriefDescription(TextFormat.TEXT))
                             }
                         }
                     }
-                    println("\n")
                 }
             }
         }
 
         private fun checkSubscribeOnCallThread(quaRefExpression: UQualifiedReferenceExpression): THREAD? {
-            println("       checkSubscribeOnCallThread(), quaRefExpression: $quaRefExpression")
             val subscribeOnCallSite: List<Triple<Int, USimpleNameReferenceExpression, UCallExpression>> = quaRefExpression.getNestedChainCalls(
                     outerMethodName = RX_SUBSCRIBEON,
                     innerClassName = listOf(SCHEDULERS, ANDR_SCHEDULERS),
                     innerMethodNames = listOf(SCHE_CALL_IO, SCHE_CALL_NEWTHREAD, SCHE_CALL_COMPUTATION, SCHE_CALL_MAINTHREAD))
-            println("       checkSubscribeOnCallThread() after  RxHelper.getComposeCallIndex call:")
+
             val subOnListSize = subscribeOnCallSite.size
             if (subOnListSize == 1) {
-                println("       checkSubscribeOnCallThread(), subOnListSize: $subOnListSize, listToStr: $subscribeOnCallSite, clsName: ${subscribeOnCallSite[0].second.getQualifiedName()}, method, ${subscribeOnCallSite[0].third.methodName}")
                 val clsName: String? = subscribeOnCallSite[0].second.getQualifiedName()
-                println("       checkSubscribeOnCallThread(), clsName: $clsName")
                 if (clsName == SCHEDULERS) {
                     return THREAD.BACKGROUND
                 } else if (clsName == ANDR_SCHEDULERS) {
@@ -161,19 +135,13 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 }
             } else if (subOnListSize > 1) {
                 //report multiple sub on calls
-                println("       checkSubscribeOnCallThread(), subscribeOn more than 1 expression: quaChain: ${quaRefExpression}")
                 var callParent: UExpression = subscribeOnCallSite[subOnListSize - 1].third
                 callParent = callParent.getParentOfType(true, UCallExpression::class.java) ?: callParent
                 javaContext.report(MULTIPLE_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(callParent), callParent.toString())
 
             } else {
-                quaRefExpression.let {
-                    println("       checkSubscribeOnCallThread(), subscribeOn missing: quaChain: ${quaRefExpression.asLogString()}")
-                    javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(quaRefExpression), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
-                }
-                //report missing subOnCall
+                javaContext.report(MISSING_SUBSCRIBE_ON_ISSUE, javaContext.getLocation(quaRefExpression), MISSING_SUBSCRIBE_ON_ISSUE.getBriefDescription(TextFormat.TEXT))
             }
-            println("checkSubscribeOnCallThread() return null")
             return null
         }
 
@@ -182,14 +150,10 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
 
             val composeListSize = composeInChainIndexes.size
             if (composeListSize == 1) {
-                println("       getComposeCallIndex(), compose size 1: compose list: $composeInChainIndexes")
                 return composeInChainIndexes[0].first
             } else if (composeListSize > 1) {
-                println("       getComposeCallIndex(), compose size > 1")
                 javaContext.report(MULTIPLE_COMPOSE_CALLS_ISSUE, quaRefExpression, javaContext.getLocation(quaRefExpression), MULTIPLE_COMPOSE_CALLS_ISSUE.getBriefDescription(TextFormat.TEXT))
-                //report multiple compose TranHolder asd Calls
             }
-            println("       getComposeCallIndex() return false")
             return 0
         }
     }
@@ -202,29 +166,20 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 if (uExpression.methodName == outerMethodName) {
                     val matchedExpression: Pair<USimpleNameReferenceExpression, UCallExpression>? = uExpression.getSearchedCall(innerClassName, innerMethodNames)
                     matchedExpression?.let {
-                        println("           getNestedChainCalls(), matchedExpression: $matchedExpression , clsName: ${matchedExpression.first.getQualifiedName()}, methodName: ${matchedExpression.second.methodName}")
                         indexClassMethod.add(Triple(index, matchedExpression.first, matchedExpression.second))
                     }
                 }
-            } else {
-                println("           getNestedChainCalls() Not an uCallExpression: " + uExpression.toString())
             }
         }
-        println("           getNestedChainCalls() return: indexClassMethod: $indexClassMethod ")
         return indexClassMethod
-
     }
 
     private fun UCallExpression.getSearchedCall(clsNames: List<String>, mthdNames: List<String>): Pair<USimpleNameReferenceExpression, UCallExpression>? {
         var pairResult: Pair<USimpleNameReferenceExpression, UCallExpression>? = null
-        println("           getSearchedCall() mcall ${this.isMethodCall()} expression: $this , mthdNames: $mthdNames, clsNames: $clsNames")
         val listSize: Int = this.valueArguments.size
         if (listSize == 1) {
             val firstArg: UExpression = this.valueArguments[0]
-
-            println("           getSearchedCall(), firstArg: ${firstArg.getExpressionType()?.canonicalText}")
             if (firstArg is UQualifiedReferenceExpression) {
-                println("           getSearchedCall(), firstArg is UQuaReferenceExpr : ${firstArg.getExpressionType()?.canonicalText}")
                 val paramExprQuaChain: List<UExpression> = firstArg.getOutermostQualified().getQualifiedChain()
 
                 var mthd: UCallExpression? = null
@@ -232,17 +187,12 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                 paramExprQuaChain.forEach { quaChild ->
                     when (quaChild) {
                         is USimpleNameReferenceExpression -> {
-                            println("           getSearchedCall() lets try to resolve, resolved name: ${quaChild.resolvedName}, resolved ${quaChild.resolve()} , resolvedtouelement: ${quaChild.resolveToUElement()} ")
-
                             quaChild.resolveToUElement()?.let {
                                 if (it is UClass) {
                                     val isDesiredClass: Boolean = (clsNames.contains(it.qualifiedName))
                                     if (isDesiredClass) {
                                         cls = quaChild
                                     }
-                                    println("           getSearchedCall(), UClass: QuaName; ${it.qualifiedName}")
-                                } else {
-                                    println("           getSearchedCall(), not a UClass")
                                 }
                             }
                         }
@@ -251,18 +201,15 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
                             if (isDesiredMethod) {
                                 mthd = quaChild
                             }
-                            println("           getSearchedCall(), uCallExpr" + quaChild.methodName)
                         }
                     }
                 }
 
                 (cls to mthd).biLet { c, m ->
-                    println("           getSearchedCall(), FOUND: clsName: ${cls.getQualifiedName()}, methodName: ${mthd?.methodName}")
                     pairResult = Pair(c, m)
                 }
             }
         }
-        println("getSearchedCall() return null")
         return pairResult
     }
 
@@ -276,5 +223,4 @@ class ComposeCallOrderDetector : Detector(), Detector.UastScanner {
         }
         return null
     }
-
 }

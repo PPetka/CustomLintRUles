@@ -21,6 +21,27 @@ jar {
         attributes('Lint-Registry-v2': 'com.ppetka.samples.lintrules.LintRegistry')
     }
 }
+assemble.finalizedBy("copyJarIntoDefaultAndroidFolder")
+
+task copyJarIntoDefaultAndroidFolder(type: Copy) {
+    //var
+    doFirst {
+        println("beforeCopy")
+    }
+    doLast {
+        println("Files copied!!")
+    }
+
+    ext.pathFrom = '\\build\\libs'
+    ext.pathTo = System.getProperty("user.home") + '\\.android\\lint'
+    //print
+    println('pathFrom: ' + ext.pathFrom)
+    println('pathTo: ' + ext.pathTo)
+
+    //copy
+    from ext.pathFrom
+    into ext.pathTo
+}
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"

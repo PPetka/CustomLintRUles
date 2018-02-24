@@ -18,13 +18,13 @@ class UnnecessaryFieldDeclarationDetector : Detector(), Detector.UastScanner {
         private const val SUPER_CLASS = "foo.pckg.SuperCls"
         private const val FIELD_CLASS = "bar.pckgg.FieldCls"
 
-        val ISSUE = Issue.create("FieldRedeclaration",
+        val ISSUE: Issue = Issue.create("FieldRedeclaration",
                 "This field is re-declared",
                 "Unnecessary field declaration, please remove this field as it's already declared in base class",
                 Category.CORRECTNESS,
                 3,
                 Severity.ERROR,
-                Implementation(UnnecessaryFieldDeclarationDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE)))!!
+                Implementation(UnnecessaryFieldDeclarationDetector::class.java, EnumSet.of<Scope>(Scope.JAVA_FILE)))
     }
 
     override fun applicableSuperClasses(): List<String>? {

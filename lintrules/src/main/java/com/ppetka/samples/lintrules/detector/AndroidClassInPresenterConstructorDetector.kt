@@ -16,13 +16,13 @@ class AndroidClassInPresenterConstructorDetector : Detector(), UastScanner {
         private const val PRESENTER_CLS = "foo.bar.Presenter"
         private const val ANDROID_STARTING_PCKG_NAME = "android."
 
-        val ISSUE = Issue.create("NoAndroidClassesAllowedInPresenterIssue",
+        val ISSUE: Issue = Issue.create("NoAndroidClassesAllowedInPresenterIssue",
                 "Android dependencies not allowed in Presenter classes",
                 "\"Network module should not be depended on android classes, and holds android logic, please satisfy presenter with necessary dependencies from outside\"",
                 Category.CORRECTNESS,
                 10,
                 Severity.ERROR,
-                Implementation(AndroidClassInPresenterConstructorDetector::class.java, EnumSet.of<Scope>(JAVA_FILE)))!!
+                Implementation(AndroidClassInPresenterConstructorDetector::class.java, EnumSet.of<Scope>(JAVA_FILE)))
     }
 
     /*IMPLEMENTATION*/
