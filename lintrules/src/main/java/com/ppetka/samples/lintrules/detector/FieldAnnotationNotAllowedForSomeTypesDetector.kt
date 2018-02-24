@@ -20,13 +20,13 @@ class FieldAnnotationNotAllowedForSomeTypesDetector : Detector(), Detector.UastS
         private const val ANNOTATION_PCKG = "foo.anno.FooAnnotation"
         private const val ALLOWED_ANNOTATING_CLASS_PCKG = "allowed.ann.pckg.AACLS"
 
-        val ISSUE = Issue.create("FooAnnotationNotAllowedForGivenType",
+        val ISSUE: Issue = Issue.create("FooAnnotationNotAllowedForGivenType",
                 "**FooAnnotation** annotation not allowed for this type",
                 "Current class does not support multiple **FooAnnotation** annotations for sending each object individually",
                 Category.CORRECTNESS,
                 8,
                 Severity.ERROR,
-                Implementation(FieldAnnotationNotAllowedForSomeTypesDetector::class.java, EnumSet.of<Scope>(JAVA_FILE)))!!
+                Implementation(FieldAnnotationNotAllowedForSomeTypesDetector::class.java, EnumSet.of<Scope>(JAVA_FILE)))
     }
 
     /*IMPLEMENTATION*/
