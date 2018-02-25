@@ -12,100 +12,82 @@ import org.junit.Test
  */
 
 class LearningDetectorTest {
-    val transoferCLSdd = TestFiles.java("""
-          |package fooo.comecls;
+    val motherCls = TestFiles.java("""
+          |package com.ppetka.samples.customlintrules;
           |
-          |class SomeCls{
+          |class MotherCls{
           |
           |}""".trimMargin())
 
-    @Test
-    fun switchCase() {
-        TestLintTask.lint().allowCompilationErrors()
-                .files(TestFiles.java("""
+    val firstCls = TestFiles.java("""
           |package com.ppetka.samples.customlintrules;
           |
+          |class FirstCls extends MotherCls {
           |
-          |class TestCls{
-          |
-          |public void firstMethod() {
-          |   if(true){
-          |    int month = 8;
-          |    String monthString;
-          |    switch (month) {
-          |       case 1: {
-          |           monthString = "January";
-          |           break;
-          |       }
-          |       case 2: {
-          |
-          |             callMethod();
-          |
-          |
-          |           monthString = "February";
-          |           break;
-          |       }
-          |    }
-          |   }
-          |
-          |}
-          |
-          |public void callMethod(){}
-          |
-          |
-          |
-          |""".trimMargin()))
-                .issues(LearningDetector.SOME_ISSUE)
-                .run()
-                .expectClean()
-    }
+          |}""".trimMargin())
 
-    val transoferCLS = TestFiles.java("""
-          |package fooo.tran;
+    val secondCls = TestFiles.java("""
+          |package com.ppetka.samples.customlintrules;
           |
-          |class TranHolder{
+          |class SecondCls extends MotherCls {
           |
-          |public static <T> SingleTransformer<T, T> asd() {
-          |      Integer innnn = new Interger(4);
-          |      SingleTransformer s = new SingleTransformer() {
-          |            @Override
-          |            public SingleSource apply(Single upstream) {
-          |                 return upstream;
-          |            }
-          |      };
-          |      return s;
-          |}
+          |     public static void mmmmmmmmmmmm(Integer innn){
+          |
+          |     }
+          |
           |}""".trimMargin())
 
 
     @Test
     fun bComposeBeforeObserveOn() {
         TestLintTask.lint().allowCompilationErrors()
-                .files(transoferCLS, ExternalLibrarys.rxAndroid2(), ExternalLibrarys.rxJava2(), TestFiles.java("""
+                .files(motherCls, firstCls, secondCls, TestFiles.java("""
           |package com.ppetka.samples.customlintrules;
           |
-          |import io.reactivex.schedulers.Schedulers;
-          |import io.reactivex.android.schedulers.AndroidSchedulers;
-          |import fooo.tran.TranHolder;
+          |class TestCls {
           |
-          |class S{
+          |    public TestClss aaaaaaaaaaa() {
+          |        return this;
+          |    }
           |
-          |public void someMethooooooood() {
-          |     Single.just("BOSS")
-          |         .subscribeOn(Schedulers.newThread())
-          |         .compose(TranHolder.asd())
-          |         .observeOn(AndroidSchedulers.mainThread())
-          |         .subscribe(new SingleObserver<String>() {
-          |             @Override
-          |             public void onSubscribe(Disposable d) {}
+          |    public TestClss bbbbbbbbbbb() {
+          |        return this;
+          |    }
           |
-          |             @Override
-          |             public void onSuccess(String s) {}
+          |    public TestClss ccccccccccc() {
+          |        return this;
+          |    }
           |
-          |             @Override
-          |             public void onError(Throwable e) {}
-          |          });
-          |}
+          |    public TestClss ddddddddddd() {
+          |        return this;
+          |    }
+          |
+          |    public TestClss func(FirstCls firstCls) {
+          |        return this;
+          |    }
+          |
+          |    public TestClss func(SecondCls secondCls) {
+          |        return this;
+          |    }
+          |          |
+          |    public TestClss func() {
+          |        return this;
+          |    }
+          |
+          |
+          |    public void testingFunc() {
+          |        FirstCls firstCls = new FirstCls();
+          |
+          |       SecondCls.mmmmmmmmmmmm(5);
+          |
+          |     bbbbbbbbbbb()
+          |                .aaaaaaaaaaa()
+          |                .ccccccccccc()
+          |                .ddddddddddd()
+          |                .func(firstCls);
+          |    }
+          |
+          |
           |}""".trimMargin()))
                 .issues(LearningDetector.SOME_ISSUE)
                 .run()
