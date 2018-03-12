@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 27
@@ -28,6 +29,10 @@ dependencies {
     //rxjava2
     implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-   // lintChecks project(':lintrules')
+    lintChecks project(':lintrules')
+}
+repositories {
+    mavenCentral()
 }

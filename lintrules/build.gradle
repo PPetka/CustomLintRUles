@@ -21,6 +21,7 @@ jar {
         attributes('Lint-Registry-v2': 'com.ppetka.samples.lintrules.LintRegistry')
     }
 }
+/*
 assemble.finalizedBy("copyJarIntoDefaultAndroidFolder")
 
 task copyJarIntoDefaultAndroidFolder(type: Copy) {
@@ -42,6 +43,7 @@ task copyJarIntoDefaultAndroidFolder(type: Copy) {
     from ext.pathFrom
     into ext.pathTo
 }
+*/
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
